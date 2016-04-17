@@ -6,7 +6,6 @@
  * @link        http://mautic.org
  * @license     MIT http://opensource.org/licenses/MIT
  */
-
 namespace Mautic\Api;
 
 use Mautic\Auth\AuthInterface;

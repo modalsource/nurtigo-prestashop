@@ -1,18 +1,34 @@
 <?php
 
-session_start();
-
 include(dirname(__FILE__) . '/../../config/config.inc.php');
 require(dirname(__FILE__) . '/lib/api/vendor/autoload.php');
 
-$module = ModuleCore::getInstanceByName("mauticprestashop");
-$auth = $module->mautic_auth(true);
-if ($auth->validateAccessToken()) {
-    if ($auth->accessTokenUpdated()) {
-        $accessTokenData = $auth->getAccessTokenData();
-        Configuration::updateGlobalValue('MAUTICPRESTASHOP_ACCESS_TOKEN_DATA', serialize($accessTokenData));
-    }
+if (Tools::getIsset('reset')) {
+    unset($_SESSION['oauth']);
 }
 
-Tools::redirect(Tools::getValue('redirect_uri'));
+$error = false;
+$module = ModuleCore::getInstanceByName("mauticprestashop");
 
+try {
+    $auth = $module->mautic_auth(Tools::getIsset('reset'));
+    if ($auth) {
+        if ($auth->validateAccessToken()) {
+            if ($auth->accessTokenUpdated()) {
+                $accessTokenData = $auth->getAccessTokenData();
+                Configuration::updateValue('MAUTICPRESTASHOP_ACCESS_TOKEN_DATA', serialize($accessTokenData), false, Tools::getValue('id_shop_group'), Tools::getValue('id_shop'));
+            }
+        }
+    }
+} catch (Exception $e) {
+    $error = true;
+}
+if (!Tools::getIsset('back')) {
+    $redirect = Tools::secureReferrer($_SERVER['HTTP_REFERER']);
+} else {
+    $redirect = urldecode(Tools::getValue('back'));
+}
+if ($error) {
+    $redirect .= '&error=1';
+}
+Tools::redirect($redirect);
