@@ -184,9 +184,9 @@ class Mauticprestashop extends Module
 
         $validAccessToken = $this->validateAccessToken();
         $access_token_data = Configuration::get('MAUTICPRESTASHOP_ACCESS_TOKEN_DATA');
-        $back = urlencode(str_replace('index.php', '', Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . $_SERVER['SCRIPT_NAME']) .
+         $back = urlencode(base64_encode(serialize(str_replace('index.php', '', Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . $_SERVER['SCRIPT_NAME']) .
             $this->context->link->getAdminLink('AdminModules', true)
-            . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name . '&authorizedone=1');
+            . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name . '&authorizedone=1')));
         $auth_url = Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . __PS_BASE_URI__ . 'modules/' . $this->name . '/authorization.php?id_shop=' . $this->context->shop->id . '&id_shop_group=' . $this->context->shop->id_shop_group . '&back=' . $back . '&reset=1';
         $this->context->smarty->assign(array(
             'has_data' => ((!Configuration::get('MAUTICPRESTASHOP_BASE_URL') || !Configuration::get('MAUTICPRESTASHOP_CLIENT_KEY') || !Configuration::get('MAUTICPRESTASHOP_CLIENT_SECRET')) ? false : true),
@@ -484,7 +484,7 @@ class Mauticprestashop extends Module
         if (Cache::retrieve($cache_id)) {
             $leadId = Cache::retrieve($cache_id);
         } else {
-            $leadIdType = $this->getLeadIdentifyType();
+            $leadIdType = trim($this->getLeadIdentifyType());
             if (is_int($leadIdType)) {
                 $leadId = $leadIdType;
             }
@@ -633,7 +633,7 @@ class Mauticprestashop extends Module
                 }
             }
         }
-        $d = urlencode(serialize($data));
+        $d = urlencode(base64_encode(serialize($data)));
         return '<img src="' . Configuration::get('MAUTICPRESTASHOP_BASE_URL') . '/mtracking.gif?d=' . $d . '" style="display: none;" />';
     }
 

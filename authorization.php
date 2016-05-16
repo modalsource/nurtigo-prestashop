@@ -1,6 +1,8 @@
 <?php
 
 include(dirname(__FILE__) . '/../../config/config.inc.php');
+session_name("mauticprestashop");
+session_start();
 require(dirname(__FILE__) . '/lib/api/vendor/autoload.php');
 
 if (Tools::getIsset('reset')) {
@@ -26,7 +28,7 @@ try {
 if (!Tools::getIsset('back')) {
     $redirect = Tools::secureReferrer($_SERVER['HTTP_REFERER']);
 } else {
-    $redirect = urldecode(Tools::getValue('back'));
+    $redirect = unserialize(base64_decode(urldecode(Tools::getValue('back'))));
 }
 if ($error) {
     $redirect .= '&error=1';
