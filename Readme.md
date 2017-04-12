@@ -15,6 +15,21 @@ Mautic 2.3 and above for Prestashop 1.6.x
 
 https://madesimple.madesimple.cloud/asset/3:mautic-23-and-above-for-prestashop-16x
 
+Support/donate my work
+-----
+
+Mautic better with crowdfunding:
+
+https://mautic-fund.kuzmany.biz/
+
+Donate my work
+
+[By PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=MRQZT5MB8DJLC&lc=SK&item_name=Zdeno%20Kuzmany%20%2f%20Mautic%20contributor&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted)
+
+My contributions to Mautic
+
+https://github.com/mautic/mautic/pulls?utf8=%E2%9C%93&q=author%3Akuzmany%20
+
 Video
 -----
 
