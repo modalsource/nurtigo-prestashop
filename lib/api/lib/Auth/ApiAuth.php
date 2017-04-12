@@ -46,6 +46,7 @@ class ApiAuth
 
         $reflection = new \ReflectionMethod($class, 'setup');
         $pass       = array();
+
         foreach ($reflection->getParameters() as $param) {
             if (isset($parameters[$param->getName()])) {
                 $pass[] = $parameters[$param->getName()];

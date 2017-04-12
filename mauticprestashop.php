@@ -31,7 +31,7 @@ require_once (dirname(__FILE__) . '/lib/api/vendor/autoload.php');
 class Mauticprestashop extends Module
 {
 
-    public $_fields = array('MAUTICPRESTASHOP_TRACKING_LEAD_FIELD_CUSTOMER', 'MAUTICPRESTASHOP_TRACKING_LEAD_FIELD_GUEST', 'MAUTICPRESTASHOP_TRACKING_CODE', 'addtolistnewsletteradded', 'addtolistoptinadded', 'addtolistcartcreated', 'addtolistordercreated', 'removetolistordercreated', 'MAUTICPRESTASHOP_CLIENT_KEY', 'MAUTICPRESTASHOP_CLIENT_SECRET', 'MAUTICPRESTASHOP_BASE_URL');
+    public $_fields = array('MAUTICPRESTASHOP_TRACKING_LEAD_FIELD_CUSTOMER', 'MAUTICPRESTASHOP_TRACKING_LEAD_FIELD_GUEST', 'MAUTICPRESTASHOP_TRACKING_CODE', 'MAUTICPRESTASHOP_TRACKING_CODE_JS', 'addtolistusercreated', 'addtolistnewsletteradded', 'addtolistoptinadded', 'addtolistcartcreated', 'addtolistordercreated', 'removetolistordercreated', 'MAUTICPRESTASHOP_CLIENT_KEY', 'MAUTICPRESTASHOP_CLIENT_SECRET', 'MAUTICPRESTASHOP_BASE_URL');
     public $_fields_api = array('MAUTICPRESTASHOP_CLIENT_KEY', 'MAUTICPRESTASHOP_CLIENT_SECRET', 'MAUTICPRESTASHOP_BASE_URL');
     public $mauticBaseUrlApi;
 
@@ -39,7 +39,7 @@ class Mauticprestashop extends Module
     {
         $this->name = 'mauticprestashop';
         $this->tab = 'administration';
-        $this->version = '1.0.0';
+        $this->version = '1.2.0';
         $this->author = 'kuzmany.biz/prestashop';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -50,7 +50,7 @@ class Mauticprestashop extends Module
         $this->displayName = $this->l('Mautic for Prestashop');
         $this->description = $this->l('Integration Mautic API to Prestashop.');
 
-        $this->mauticBaseUrlApi = Configuration::get('MAUTICPRESTASHOP_BASE_URL') . '/api/';
+        $this->mauticBaseUrlApi = Configuration::get('MAUTICPRESTASHOP_BASE_URL');
     }
 
     public function install()
@@ -82,7 +82,9 @@ class Mauticprestashop extends Module
 
     public function hookHeader()
     {
-        
+        if (Dispatcher::getInstance()->getController() == 'identity' && Tools::isSubmit('submitIdentity')) {
+            
+        }
     }
 
     public function mapFromArray($array)
@@ -91,11 +93,13 @@ class Mauticprestashop extends Module
         if ($leadId) {
             $data = array();
             $auth = $this->mautic_auth();
-            $leadApi = Mautic\MauticApi::getContext("leads", $auth, $this->mauticBaseUrlApi);
-            $data = array();
+            $api = new Mautic\MauticApi();
+            $leadApi = $api->newApi('contacts', $auth, $this->mauticBaseUrlApi);
             foreach ($array as $key => $a) {
-                if (in_array($key, $this->getPrestashopMauticMapping())) {
-                    $data[$key] = $a;
+                foreach ($this->getPrestashopMauticMapping() as $key2 => $a2) {
+                    if ($key2 == $key) {
+                        $data[$a2] = $a;
+                    }
                 }
             }
             if (!empty($data)) {
@@ -148,7 +152,7 @@ class Mauticprestashop extends Module
         $ret = array();
         foreach ($fields as $field) {
             if ($value = Configuration::get($field)) {
-                $ret[$field] = $value;
+                $ret[str_replace($this->name, '', $field)] = $value;
             }
         }
         return $ret;
@@ -184,9 +188,9 @@ class Mauticprestashop extends Module
 
         $validAccessToken = $this->validateAccessToken();
         $access_token_data = Configuration::get('MAUTICPRESTASHOP_ACCESS_TOKEN_DATA');
-         $back = urlencode(base64_encode(serialize(str_replace('index.php', '', Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . $_SERVER['SCRIPT_NAME']) .
-            $this->context->link->getAdminLink('AdminModules', true)
-            . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name . '&authorizedone=1')));
+        $back = urlencode(base64_encode(serialize(str_replace('index.php', '', Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . $_SERVER['SCRIPT_NAME']) .
+                    $this->context->link->getAdminLink('AdminModules', true)
+                    . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name . '&authorizedone=1')));
         $auth_url = Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . __PS_BASE_URI__ . 'modules/' . $this->name . '/authorization.php?id_shop=' . $this->context->shop->id . '&id_shop_group=' . $this->context->shop->id_shop_group . '&back=' . $back . '&reset=1';
         $this->context->smarty->assign(array(
             'has_data' => ((!Configuration::get('MAUTICPRESTASHOP_BASE_URL') || !Configuration::get('MAUTICPRESTASHOP_CLIENT_KEY') || !Configuration::get('MAUTICPRESTASHOP_CLIENT_SECRET')) ? false : true),
@@ -217,6 +221,24 @@ class Mauticprestashop extends Module
                         'type' => 'switch',
                         'label' => $this->l('Add Mautic Tracking pixel to website'),
                         'name' => 'MAUTICPRESTASHOP_TRACKING_CODE',
+                        'values' => array(
+                            array(
+                                'id' => 'active_on',
+                                'value' => 1,
+                                'label' => $this->l('Enabled')
+                            ),
+                            array(
+                                'id' => 'active_off',
+                                'value' => 0,
+                                'label' => $this->l('Disabled')
+                            )
+                        ),
+                    ),
+                    array(
+                        'tab' => 'tracking',
+                        'type' => 'switch',
+                        'label' => $this->l('Javascript Based Tracking for Mautic 1.4 and above'),
+                        'name' => 'MAUTICPRESTASHOP_TRACKING_CODE_JS',
                         'values' => array(
                             array(
                                 'id' => 'active_on',
@@ -284,6 +306,19 @@ class Mauticprestashop extends Module
                     'name' => 'label',
                 ),
             );
+
+            $form['form']['input'][] = array(
+                'tab' => 'lists',
+                'type' => 'select',
+                'label' => $this->l('Add to the list if customer is created'),
+                'name' => 'addtolistusercreated',
+                'options' => array(
+                    'query' => $this->getMauticLists(),
+                    'id' => 'id',
+                    'name' => 'name',
+                ),
+            );
+
 
             $form['form']['input'][] = array(
                 'tab' => 'lists',
@@ -365,7 +400,7 @@ class Mauticprestashop extends Module
     private function getPrestashopMapping()
     {
         $prestashop_fields_mapping = AddressFormat::getValidateFields('Address');
-        $prestashop_fields_mapping = array_merge($prestashop_fields_mapping, array('id_gender', 'birthday', 'newsletter', 'optin', 'website', 'id_order'));
+        $prestashop_fields_mapping = array_merge($prestashop_fields_mapping, array('id_gender', 'birthday', 'newsletter', 'optin', 'website', 'id_order', 'id_cart', 'cart_content', 'email'));
         return $prestashop_fields_mapping;
     }
 
@@ -375,7 +410,6 @@ class Mauticprestashop extends Module
         foreach ($this->getPrestashopMapping() as $field) {
             $ret[] = $this->name . $field;
         }
-
         return $ret;
     }
 
@@ -387,7 +421,8 @@ class Mauticprestashop extends Module
             $fields_mapping = array();
             $auth = $this->mautic_auth();
             if ($auth->validateAccessToken()) {
-                $leadApi = Mautic\MauticApi::getContext("leads", $auth, $this->mauticBaseUrlApi);
+                $api = new Mautic\MauticApi();
+                $leadApi = $api->newApi('leads', $auth, $this->mauticBaseUrlApi);
                 $fields_mapping = $leadApi->getFieldList();
             }
             array_unshift($fields_mapping, array('alias' => '', 'label' => $this->l('-skip-')));
@@ -405,8 +440,13 @@ class Mauticprestashop extends Module
             $auth = $this->mautic_auth();
             $validAccessToken = $auth->validateAccessToken();
             if ($validAccessToken) {
-                $listApi = Mautic\MauticApi::getContext("lists", $auth, $this->mauticBaseUrlApi);
+                $api = new Mautic\MauticApi();
+                $listApi = $api->newApi('segments', $auth, $this->mauticBaseUrlApi);
                 $lists = $listApi->getList();
+
+                if(isset($lists['lists'])){
+                    $lists = $lists['lists'];
+                }
             }
             array_unshift($lists, array('id' => '', 'name' => $this->l('-skip-')));
             Cache::store(__CLASS__ . __FUNCTION__ . 'c', $lists);
@@ -457,12 +497,15 @@ class Mauticprestashop extends Module
                 $settings['accessTokenSecret'] = $accessTokenData['access_token_secret'];
             }
         }
-        return Mautic\Auth\ApiAuth::initiate($settings);
+        $auth = new Mautic\Auth\ApiAuth();
+        return $auth->newAuth($settings);
     }
 
     public function getLeadIdentifyType()
     {
-        if (isset($_COOKIE['mautic_session_id'])) {
+        if (isset($_COOKIE['mtc_id'])) {
+            return $_COOKIE['mtc_id'];
+        }elseif (isset($_COOKIE['mautic_session_id'])) {
             $sessionId = $_COOKIE['mautic_session_id'];
             if (isset($_COOKIE[$sessionId])) {
                 return $_COOKIE[$sessionId];
@@ -484,14 +527,15 @@ class Mauticprestashop extends Module
         if (Cache::retrieve($cache_id)) {
             $leadId = Cache::retrieve($cache_id);
         } else {
-            $leadIdType = trim($this->getLeadIdentifyType());
-            if (is_int($leadIdType)) {
+            $leadIdType = $this->getLeadIdentifyType();
+            if (is_numeric($leadIdType)) {
                 $leadId = $leadIdType;
             }
             if ($leadIdType && !is_int($leadIdType) && is_array($leadIdType) && !empty($leadIdType)) {
                 $fields = $leadIdType;
                 $auth = $this->mautic_auth();
-                $leadApi = Mautic\MauticApi::getContext("leads", $auth, $this->mauticBaseUrlApi);
+                $api = new Mautic\MauticApi();
+                $leadApi = $api->newApi('contacts', $auth, $this->mauticBaseUrlApi);
                 foreach ($fields as $type => $field) {
                     if ($type == 'customer') {
                         $search = $field . ':' . Context::getContext()->customer->id;
@@ -500,9 +544,9 @@ class Mauticprestashop extends Module
                     }
                     $leads = $leadApi->getList($search);
                     if (isset($leads['total']) && $leads['total'] > 0) {
-                        if (isset($leads['leads'])) {
-                            array_reverse($leads['leads']);
-                            $leadId = $leads['leads'][0]['id'];
+                        if (isset($leads['contacts'])) {
+                            array_reverse($leads['contacts']);
+                            $leadId = $leads['contacts'][0]['id'];
                             Cache::store($cache_id, $leadId);
                             break;
                         }
@@ -524,29 +568,33 @@ class Mauticprestashop extends Module
 
     public function hookActionAuthentication($params)
     {
-        $this->proccessCustomerData($params['customer']);
+        $customer = $this->context->customer;
+        $this->proccessCustomerData($customer);
     }
 
     public function hookActionCustomerAccountAdd($params)
     {
-        $this->proccessCustomerData($params['newCustomer']);
+        $this->proccessCustomerData($params['newCustomer'], true);
     }
 
-    public function proccessCustomerData($customer)
+    public function proccessCustomerData($customer, $new = false)
     {
         $leadId = $this->getLeadId();
         if ($leadId) {
+            $listIdUserCreated = Configuration::get('addtolistusercreated');
             $listIdNewsletter = Configuration::get('addtolistnewsletteradded');
             $listIdOptin = Configuration::get('addtolistoptinadded');
 
             $newsletter = $customer->newsletter;
             $optin = $customer->optin;
             $auth = $this->mautic_auth();
-            $listApi = Mautic\MauticApi::getContext("lists", $auth, $this->mauticBaseUrlApi);
-            if ($newsletter) {
-                if ($listIdNewsletter) {
-                    $listApi->addLead($listIdNewsletter, $leadId);
-                }
+            $api = new Mautic\MauticApi();
+            $listApi = $api->newApi('segments', $auth, $this->mauticBaseUrlApi);
+            if ($new && $listIdUserCreated) {
+               $result =  $listApi->addLead($listIdUserCreated, $leadId);
+            }
+            if ($newsletter && $listIdNewsletter) {
+                $listApi->addLead($listIdNewsletter, $leadId);
             }
             if ($optin && $listIdOptin) {
                 $listApi->addLead($listIdOptin, $leadId);
@@ -564,12 +612,27 @@ class Mauticprestashop extends Module
                 if (Validate::isLoadedObject($cart)) {
                     if (Tools::getIsset('add')) {
                         $auth = $this->mautic_auth();
-                        $listApi = Mautic\MauticApi::getContext("lists", $auth, $this->mauticBaseUrlApi);
+                        $api = new Mautic\MauticApi();
+                        $listApi = $api->newApi('segments', $auth, $this->mauticBaseUrlApi);
                         $listApi->addLead($listid, $leadId);
+                        $this->mapFromArray(array('id_cart' => $cart->id, 'cart_content' => $this->returnTextfromArray($cart->getProducts())));
                     }
                 }
             }
         }
+    }
+
+    private function returnTextfromArray(array $products)
+    {
+        $content = '';
+        foreach ($products as $product) {
+            foreach ($product as $key => $value) {
+                if (!is_array($value)) {
+                    $content .= $key . ': ' . $value . "\n";
+                }
+            }
+        }
+        return $content;
     }
 
     public function hookOrderConfirmation($params)
@@ -582,17 +645,18 @@ class Mauticprestashop extends Module
                 $leadId = $this->getLeadId();
                 if ($leadId) {
                     $auth = $this->mautic_auth();
-                    $listApi = Mautic\MauticApi::getContext("lists", $auth, $this->mauticBaseUrlApi);
+                    $api = new Mautic\MauticApi();
+                    $listApi = $api->newApi('segments', $auth, $this->mauticBaseUrlApi);
                     if ($listIdAdd) {
                         $listApi->addLead($listIdAdd, $leadId);
                     }
                     if ($listIdRemove) {
                         $listApi->removeLead($listIdRemove, $leadId);
                     }
-                    $this->mapCustomerAndAddress(Context::getContext()->customer);
-                    $this->mapFromArray(array('id_order' => $order->id));
                 }
             }
+            $this->mapCustomerAndAddress(Context::getContext()->customer);
+            $this->mapFromArray(array('id_order' => $order->id));
         }
     }
 
@@ -612,11 +676,7 @@ class Mauticprestashop extends Module
     {
 // tracking code
         $data = array();
-        $data['page_url'] = $_SERVER['REQUEST_URI'];
-        $data['page_title'] = $this->context->smarty->getTemplateVars('meta_title');
         $data['page_language'] = Context::getContext()->language->iso_code;
-        if (isset($_SERVER['HTTP_REFERER']) and $_SERVER['HTTP_REFERER'] != '')
-            $data['page_referrer'] = $_SERVER['HTTP_REFERER'];
         if ($email != null) {
             $data['email'] = $email;
         } elseif (isset(Context::getContext()->customer->email)) {
@@ -633,19 +693,32 @@ class Mauticprestashop extends Module
                 }
             }
         }
-        $d = urlencode(base64_encode(serialize($data)));
-        return '<img src="' . Configuration::get('MAUTICPRESTASHOP_BASE_URL') . '/mtracking.gif?d=' . $d . '" style="display: none;" />';
+        if (Configuration::get('MAUTICPRESTASHOP_TRACKING_CODE_JS')) {
+            return "<script>
+    (function(w,d,t,u,n,a,m){w['MauticTrackingObject']=n;
+        w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)},a=d.createElement(t),
+        m=d.getElementsByTagName(t)[0];a.async=1;a.src=u;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','" . Configuration::get('MAUTICPRESTASHOP_BASE_URL') . "/mtc.js','mt');
+    mt('send', 'pageview',  " . json_encode($data) . ");
+</script>";
+        } else {
+            $d = urlencode(base64_encode(serialize($data)));
+            return '<img src="' . Configuration::get('MAUTICPRESTASHOP_BASE_URL') . '/mtracking.gif?d = ' . $d . '" style="display: none;
+            " />';
+        }
     }
 
     public function hookDisplayFooter()
     {
-        if (!Cache::isStored('mautic_tracking_code')) {
+        if (Configuration::get('MAUTICPRESTASHOP_TRACKING_CODE') && !Cache::isStored('mautic_tracking_code')) {
             return $this->getTrackingCode();
         }
     }
 
     public function get_public_content()
     {
+
+
         $content = array();
 
         foreach ($this->getFields() as $field)
@@ -655,6 +728,7 @@ class Mauticprestashop extends Module
 
     private function getFields()
     {
-        return array_merge($this->_fields, $this->getPrestashopMappingWithPrefix());
+        return array_merge(
+            $this->_fields, $this->getPrestashopMappingWithPrefix());
     }
 }

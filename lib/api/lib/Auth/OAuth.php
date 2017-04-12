@@ -442,6 +442,7 @@ class OAuth extends ApiAuth implements AuthInterface
             //Request an access token
             if ($_GET['state'] != $_SESSION['oauth']['state']) {
                 unset($_SESSION['oauth']['state']);
+
                 return false;
             }
 
@@ -536,7 +537,7 @@ class OAuth extends ApiAuth implements AuthInterface
                 'client_secret' => $this->_client_secret,
                 'grant_type'    => 'authorization_code'
             );
-            
+
             if (isset($_GET['code'])) {
                 $parameters['code'] = $_GET['code'];
             }
@@ -558,6 +559,7 @@ class OAuth extends ApiAuth implements AuthInterface
         );
 
         $params = $this->makeRequest($this->_access_token_url, $parameters, $method, $settings);
+
         //Add the token and secret to session
         if (is_array($params)) {
             if ($this->isOauth1()) {
@@ -577,7 +579,7 @@ class OAuth extends ApiAuth implements AuthInterface
                     return true;
                 }
             } else {
-                //OAuth 2.
+                //OAuth 2.0
                 if (isset($params['access_token']) && isset($params['expires_in'])) {
                     $this->log('access token set as '.$params['access_token']);
 
@@ -667,6 +669,8 @@ class OAuth extends ApiAuth implements AuthInterface
     {
         $this->log('makeRequest('.$url.', '.http_build_query($parameters).', '.$method.',...)');
 
+        list($url, $parameters) = $this->separateUrlParams($url, $parameters);
+
         $includeCallback = (isset($settings['includeCallback'])) ? $settings['includeCallback'] : false;
         $includeVerifier = (isset($settings['includeVerifier'])) ? $settings['includeVerifier'] : false;
 
@@ -741,7 +745,7 @@ class OAuth extends ApiAuth implements AuthInterface
         //Set post fields for POST/PUT/PATCH requests
         if (in_array($method, array('POST', 'PUT', 'PATCH'))) {
             $options[CURLOPT_POST]       = true;
-            $options[CURLOPT_POSTFIELDS] = http_build_query($parameters);
+            $options[CURLOPT_POSTFIELDS] = http_build_query($parameters, '', '&');
             $this->log('Posted parameters = '.$options[CURLOPT_POSTFIELDS]);
         }
 
@@ -849,7 +853,7 @@ class OAuth extends ApiAuth implements AuthInterface
      */
     private function buildBaseString($baseURI, $method, $params)
     {
-        $r = $this->normalizeParameters($params);
+        $r = $this->normalizeParameters($params, true);
 
         return $method.'&'.$this->encode($baseURI).'&'.$this->encode($r);
     }
@@ -973,5 +977,26 @@ class OAuth extends ApiAuth implements AuthInterface
     protected function isOauth1()
     {
         return strlen($this->_request_token_url) > 0;
+    }
+
+    /**
+     * Separates parameters from base URL
+     *
+     * @return array
+     */
+    protected function separateUrlParams($url, $params)
+    {
+        $a = parse_url($url);
+
+        if (!empty($a['query'])) {
+            parse_str($a['query'], $qparts);
+            foreach ($qparts as $k => $v) {
+                $cleanParams[$k] = $v ? $v : '';
+            }
+            $params = array_merge($params, $cleanParams);
+            $url = explode('?', $url, 2)[0];
+        }
+
+        return array($url, $params);
     }
 }
