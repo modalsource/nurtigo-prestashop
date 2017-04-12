@@ -1,11 +1,11 @@
 Mautic for Prestashop 1.6 and 1.7
 =====================
 Popular plugin now as open source. 
-Contributions are welcome as Pull requests.
+Pull requests are welcome :)
 
 Download
 -----
-From Githup or from archive:
+Here on Github or from archive
 
 Mautic 2.3 and above for Prestashop 1.7.x
 https://madesimple.madesimple.cloud/asset/2:mautic-23-and-above-for-prestashop-17x
