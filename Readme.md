@@ -18,7 +18,7 @@ https://madesimple.madesimple.cloud/asset/3:mautic-23-and-above-for-prestashop-1
 Support/donate my work
 -----
 
-Mautic better with crowdfunding:
+Fund new Mautic features
 
 https://mautic-fund.kuzmany.biz/
 
