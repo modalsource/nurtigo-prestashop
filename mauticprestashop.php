@@ -39,7 +39,7 @@ class Mauticprestashop extends Module
     {
         $this->name = 'mauticprestashop';
         $this->tab = 'administration';
-        $this->version = '1.2.0';
+        $this->version = '1.7.0';
         $this->author = 'kuzmany.biz/prestashop';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -188,7 +188,7 @@ class Mauticprestashop extends Module
 
         $validAccessToken = $this->validateAccessToken();
         $access_token_data = Configuration::get('MAUTICPRESTASHOP_ACCESS_TOKEN_DATA');
-        $back = urlencode(base64_encode(serialize(str_replace('index.php', '', Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . $_SERVER['SCRIPT_NAME']) .
+        $back = urlencode(base64_encode(serialize(
                     $this->context->link->getAdminLink('AdminModules', true)
                     . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name . '&authorizedone=1')));
         $auth_url = Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . __PS_BASE_URI__ . 'modules/' . $this->name . '/authorization.php?id_shop=' . $this->context->shop->id . '&id_shop_group=' . $this->context->shop->id_shop_group . '&back=' . $back . '&reset=1';
@@ -400,7 +400,7 @@ class Mauticprestashop extends Module
     private function getPrestashopMapping()
     {
         $prestashop_fields_mapping = AddressFormat::getValidateFields('Address');
-        $prestashop_fields_mapping = array_merge($prestashop_fields_mapping, array('id_gender', 'birthday', 'newsletter', 'optin', 'website', 'id_order', 'id_cart', 'cart_content', 'email'));
+        $prestashop_fields_mapping = array_merge($prestashop_fields_mapping, array('email','id_gender', 'birthday', 'newsletter', 'optin', 'website', 'id_order', 'id_cart', 'cart_content'));
         return $prestashop_fields_mapping;
     }
 
@@ -610,13 +610,11 @@ class Mauticprestashop extends Module
             $leadId = $this->getLeadId();
             if ($leadId) {
                 if (Validate::isLoadedObject($cart)) {
-                    if (Tools::getIsset('add')) {
                         $auth = $this->mautic_auth();
                         $api = new Mautic\MauticApi();
                         $listApi = $api->newApi('segments', $auth, $this->mauticBaseUrlApi);
                         $listApi->addLead($listid, $leadId);
                         $this->mapFromArray(array('id_cart' => $cart->id, 'cart_content' => $this->returnTextfromArray($cart->getProducts())));
-                    }
                 }
             }
         }
@@ -637,7 +635,8 @@ class Mauticprestashop extends Module
 
     public function hookOrderConfirmation($params)
     {
-        $order = $params['objOrder'];
+
+        $order = $params['order'];
         if (Validate::isLoadedObject($order) && $order->getCurrentState() != (int) Configuration::get('PS_OS_ERROR')) {
             $listIdAdd = Configuration::get('addtolistordercreated');
             $listIdRemove = Configuration::get('removetolistordercreated');
