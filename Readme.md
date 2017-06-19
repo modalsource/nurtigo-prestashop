@@ -3,6 +3,13 @@ Mautic for Prestashop 1.6 and 1.7
 Popular plugin now as open source. 
 Pull requests are welcome :)
 
+Current status
+-----
+Module was release as open source times ago. Works with older version of Mautic and Prestashop. 
+Unfortunately I don't have free time for maintaining now, but pull requests from community are welcome. 
+I'm able to improve plugin but for just for donate (35€/hourly rate). If you are interest write me to zdeno@kuzmany.biz.
+Thank you for understanding and support my other features in [Mautic](https://github.com/mautic/mautic/pulls?utf8=%E2%9C%93&q=author%3Akuzmany).
+
 Download
 -----
 Here on Github or from archive
