@@ -10,25 +10,25 @@
 namespace Mautic\Api;
 
 /**
- * Assets Context
+ * Smses Context
  */
-class Assets extends Api
+class Smses extends Api
 {
 
     /**
      * {@inheritdoc}
      */
-    protected $endpoint = 'assets';
+    protected $endpoint = 'smses';
 
     /**
      * {@inheritdoc}
      */
-    protected $listName = 'assets';
+    protected $listName = 'smses';
 
     /**
      * {@inheritdoc}
      */
-    protected $itemName = 'asset';
+    protected $itemName = 'sms';
 
     /**
      * {@inheritdoc}
@@ -40,5 +40,19 @@ class Assets extends Api
         'is:mine',
         'is:uncategorized',
         'category',
+        'lang',
     );
+
+    /**
+     * Send sms to a specific contact
+     *
+     * @param int $id
+     * @param int $contactId
+     *
+     * @return array|mixed
+     */
+    public function sendToContact($id, $contactId)
+    {
+        return $this->makeRequest($this->endpoint.'/'.$id.'/contact/'.$contactId.'/send', array(), 'POST');
+    }
 }
