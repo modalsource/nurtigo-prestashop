@@ -7,15 +7,26 @@
  * @license     MIT http://opensource.org/licenses/MIT
  */
 
-namespace Mautic\Exception;
+namespace Mautic\Api;
 
 /**
- * Exception representing a requested API context which was not found
+ * Tags Context
  */
-class ContextNotFoundException extends AbstractApiException
+class Tags extends Api
 {
+
     /**
      * {@inheritdoc}
      */
-    const DEFAULT_MESSAGE = 'Context not found.';
+    protected $endpoint = 'tags';
+
+    /**
+     * {@inheritdoc}
+     */
+    protected $listName = 'tags';
+
+    /**
+     * {@inheritdoc}
+     */
+    protected $itemName = 'tag';
 }

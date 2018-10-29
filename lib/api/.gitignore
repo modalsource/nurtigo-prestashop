@@ -1,6 +1,0 @@
-/.idea
-/composer.lock
-/phpunit.xml
-/tests/local.config.php
-/tests/phpunit.phar
-/vendor
