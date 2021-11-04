@@ -28,7 +28,7 @@ if (!defined('_PS_VERSION_'))
 
 require_once (dirname(__FILE__) . '/lib/api/vendor/autoload.php');
 
-class Mauticprestashop extends Module
+class Nurtigoprestashop extends Module
 {
 
     public $_fields = array('MAUTICPRESTASHOP_TRACKING_LEAD_FIELD_CUSTOMER', 'MAUTICPRESTASHOP_TRACKING_LEAD_FIELD_GUEST', 'MAUTICPRESTASHOP_TRACKING_CODE', 'MAUTICPRESTASHOP_TRACKING_CODE_JS', 'addtolistusercreated', 'addtolistnewsletteradded', 'addtolistoptinadded', 'addtolistcartcreated', 'addtolistordercreated', 'removetolistordercreated', 'MAUTICPRESTASHOP_CLIENT_KEY', 'MAUTICPRESTASHOP_CLIENT_SECRET', 'MAUTICPRESTASHOP_BASE_URL');
@@ -38,17 +38,18 @@ class Mauticprestashop extends Module
     public function __construct()
     {
         $this->name = 'mauticprestashop';
+//        $this->name = 'nurtigoprestashop';
         $this->tab = 'administration';
         $this->version = '1.7.0';
-        $this->author = 'kuzmany.biz/prestashop';
+        $this->author = 'nurtigo.com/prestashop';
         $this->need_instance = 0;
         $this->bootstrap = true;
         $this->module_key = '4d10333ceab8a1c5c0901a143144519b';
 
         parent::__construct();
 
-        $this->displayName = $this->l('Mautic for Prestashop');
-        $this->description = $this->l('Integration Mautic API to Prestashop.');
+        $this->displayName = $this->l('Nurtigo for Prestashop');
+        $this->description = $this->l('Integration Nurtigo API to Prestashop.');
 
         $this->mauticBaseUrlApi = Configuration::get('MAUTICPRESTASHOP_BASE_URL');
     }
@@ -112,7 +113,7 @@ class Mauticprestashop extends Module
      */
     public function getContent()
     {
-        if (((bool) Tools::isSubmit('submitMauticprestashopModule')) == true) {
+        if (((bool) Tools::isSubmit('submitNurtigoprestashopModule')) == true) {
             $this->postProcess();
         }
 
@@ -130,7 +131,7 @@ class Mauticprestashop extends Module
         $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG', 0);
 
         $helper->identifier = $this->identifier;
-        $helper->submit_action = 'submitMauticprestashopModule';
+        $helper->submit_action = 'submitNurtigoprestashopModule';
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
             . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
@@ -190,7 +191,7 @@ class Mauticprestashop extends Module
         $back = urlencode(base64_encode(serialize(
                     $this->context->link->getAdminLink('AdminModules', true)
                     . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name . '&authorizedone=1')));
-        $auth_url = Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . __PS_BASE_URI__ . 'modules/' . $this->name . '/authorization.php?id_shop=' . $this->context->shop->id . '&id_shop_group=' . $this->context->shop->id_shop_group . '&back=' . $back . '&reset=1';
+        $auth_url = Tools::getProtocol() . Tools::safeOutput(Tools::getHttpHost()) . __PS_BASE_URI__ . 'modules/' . $this->name . '/authorization.php?id_shop=' . $this->context->shop->id . '&id_shop_group=' . $this->context->shop->id_shop_group . '&back=' . $back . '&reset=1';
         $this->context->smarty->assign(array(
             'has_data' => ((!Configuration::get('MAUTICPRESTASHOP_BASE_URL') || !Configuration::get('MAUTICPRESTASHOP_CLIENT_KEY') || !Configuration::get('MAUTICPRESTASHOP_CLIENT_SECRET')) ? false : true),
             'error' => Tools::getIsset('error'),
@@ -481,7 +482,7 @@ class Mauticprestashop extends Module
             'version' => 'OAuth1a',
             'clientKey' => Configuration::get('MAUTICPRESTASHOP_CLIENT_KEY'),
             'clientSecret' => Configuration::get('MAUTICPRESTASHOP_CLIENT_SECRET'),
-            'callback' => Tools::getProtocol() . Tools::safeOutput(Tools::getServerName()) . __PS_BASE_URI__ . '/modules/mauticprestashop/authorization.php'
+            'callback' => Tools::getProtocol() . Tools::safeOutput(Tools::getHttpHost()) . __PS_BASE_URI__ . '/modules/mauticprestashop/authorization.php'
         );
         if (Tools::getIsset('back')) {
             $settings['callback'] .= '?back=' . urlencode(Tools::getValue('back'));
